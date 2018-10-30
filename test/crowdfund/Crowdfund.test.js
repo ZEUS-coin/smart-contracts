@@ -9,7 +9,7 @@ require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
-/*contract('Crowdfund', function ([_, holder, notHolder, owner, wallet, ...otherAccounts]) {
+contract('Crowdfund', function ([_, holder, notHolder, owner, wallet, ...otherAccounts]) {
  
   beforeEach(async function () {
 
@@ -29,4 +29,4 @@ require('chai')
         expectEvent.inLogs(logs, 'FundsAdded', { donator: holder, amount:amount });
       });
   });
-});*/
+});
