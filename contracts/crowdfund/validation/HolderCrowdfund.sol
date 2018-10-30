@@ -23,6 +23,7 @@ contract HolderCrowdfund is Crowdfund {
    /**
     * @dev 
     * @param token Address of the token which is need holds 
+    * @param holding  
     */
     constructor(IERC20 token, uint256 holding) public {
         require(holding > 0);

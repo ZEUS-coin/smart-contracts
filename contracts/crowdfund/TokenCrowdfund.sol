@@ -8,7 +8,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
 /**
  * @title TokenCrowdfund
- * @dev TokenCrowdfund is a base contract for managing for managing donations,
+ * @dev TokenCrowdfund is a base contract for managing token donations,
  * allowing donators to donate tokens to a cause. This contract implements
  * such functionality in its most fundamental form and can be extended to provide additional
  * functionality and/or custom behavior.
@@ -21,7 +21,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 contract TokenCrowdfund{
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
-      // Address where funds are collected
+    // Address where funds are collected
     address private _wallet;
     // The token to collect
     IERC20 private _token;
@@ -32,7 +32,7 @@ contract TokenCrowdfund{
     * @param donator who paid for the tokens
     * @param amount amount of tokens purchased
     */
-    event FundsAdded(
+    event FundsWithdraw(
         address indexed donator,
         uint256 amount
     );
@@ -58,13 +58,13 @@ contract TokenCrowdfund{
         return _wallet;
     }
     /**
-    * @return the token being sold.
+    * @return the token being donated.
     */
     function token() public view returns(IERC20) {
         return _token;
     }
     /**
-    * @return the mount of wei raised.
+    * @return the mount of token raised.
     */
     function tokenRaised() public view returns (uint256) {
         return _tokenRaised;
@@ -72,25 +72,12 @@ contract TokenCrowdfund{
 
     /**
     * @dev low level add fund ***DO NOT OVERRIDE***
-    * @param beneficiary Address receiving the donations
-    * @param amount Amount of tokens
     */
-    function addTokenFund(address beneficiary, uint256 amount) public payable {
+    function withdrawFunds() public {
 
-        _preValidateFund(beneficiary, amount);
-
+        _preValidateFund();
+        _withdrawFunds();
         // update state
-        _tokenRaised = _tokenRaised.add(amount);
-
-        emit FundsAdded(
-            msg.sender,
-            amount
-        );
-
-        _updateFundState(beneficiary, amount);
-
-        _forwardFunds(beneficiary, amount);
-        _postValidateFund(beneficiary, amount);
     }
   
      // -----------------------------------------
@@ -102,51 +89,25 @@ contract TokenCrowdfund{
     * Example from HolderCrowdfund.sol's _preValidatePurchase method:
     *   super._preValidatePurchase(beneficiary, weiAmount);
     *   require(weiRaised().add(weiAmount) <= cap);
-    * @param beneficiary Address performing the token purchase
-    * @param weiAmount Value in wei involved in the purchase
     */
     function _preValidateFund(
-        address beneficiary,
-        uint256 weiAmount
     )
         internal
     {
-        require(beneficiary != address(0));
-        require(weiAmount != 0);
-        require(_token.allowance(beneficiary, _wallet) == weiAmount);
+      
     }
 
     /**
-    * @dev Validation of an executed donation fund. Observe state and use revert statements to undo rollback when valid conditions are not met.
-    * @param beneficiary Address performing the fund donation
-    * @param weiAmount Value in wei involved in the donation
+    * @dev Withdraw funds to destination wallet and update token reaised
     */
-    function _postValidateFund(
-        address beneficiary,
-        uint256 weiAmount
-    )
-        internal
-    {
-        // optional override
-    }
-    /**
-    * @dev Override for extensions that require an internal state to check for validity (current user contributions, etc.)
-    * @param beneficiary Address receiving the tokens
-    * @param weiAmount Value in wei involved in the purchase
-    */
-    function _updateFundState(
-        address beneficiary,
-        uint256 weiAmount
-    )
-        internal
-    {
-        // optional override
-    }
-    /**
-    * @dev Determines how ETH is stored/forwarded on donations.
-    */
-    function _forwardFunds(address beneficiary, uint256 amount) internal {
-        _token.safeTransferFrom(beneficiary, _wallet, amount);
+    function _withdrawFunds() internal {
+        uint256 amount = _token.balanceOf(address(this));
+        _tokenRaised = _tokenRaised.add(amount);
+        _token.safeTransfer(_wallet, amount);
+        emit FundsWithdraw(
+            msg.sender,
+            amount
+        );
     }
 
 

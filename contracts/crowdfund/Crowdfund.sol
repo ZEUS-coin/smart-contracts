@@ -78,18 +78,8 @@ contract Crowdfund {
         uint256 weiAmount = msg.value;
         _preValidateFund(beneficiary, weiAmount);
 
-        // update state
-        _weiRaised = _weiRaised.add(weiAmount);
+        _processFunds(beneficiary, weiAmount);
 
-        emit FundsAdded(
-            msg.sender,
-            weiAmount
-            );
-
-        _updateFundState(beneficiary, weiAmount);
-
-        _forwardFunds();
-        _postValidateFund(beneficiary, weiAmount);
     }
 
     // -----------------------------------------
@@ -114,36 +104,18 @@ contract Crowdfund {
         require(weiAmount != 0);
     }
 
+
+   
     /**
-    * @dev Validation of an executed donation fund. Observe state and use revert statements to undo rollback when valid conditions are not met.
-    * @param beneficiary Address performing the fund donation
-    * @param weiAmount Value in wei involved in the donation
+    * @dev Process donated funds
     */
-    function _postValidateFund(
-        address beneficiary,
-        uint256 weiAmount
-    )
-        internal
-    {
-        // optional override
+    function _processFunds(address beneficiary, uint256 weiAmount) internal {
+        _weiRaised = _weiRaised.add(weiAmount); 
+        _wallet.transfer(weiAmount);
+        emit FundsAdded(
+            beneficiary,
+            weiAmount
+            );
     }
-    /**
-    * @dev Override for extensions that require an internal state to check for validity (current user contributions, etc.)
-    * @param beneficiary Address receiving the tokens
-    * @param weiAmount Value in wei involved in the purchase
-    */
-    function _updateFundState(
-        address beneficiary,
-        uint256 weiAmount
-    )
-        internal
-    {
-        // optional override
-    }
-    /**
-    * @dev Determines how ETH is stored/forwarded on donations.
-    */
-    function _forwardFunds() internal {
-        _wallet.transfer(msg.value);
-    }
+ 
 }
